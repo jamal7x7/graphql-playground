@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { GraphQLServer } from 'graphql-yoga'
 
-const usersData = [
+let usersData = [
 	{
 		id: 'u1',
 		name: 'Jamal',
@@ -21,7 +21,7 @@ const usersData = [
 		email: 'rayan123@rayan.com'
 	}
 ]
-const postsData = [
+let postsData = [
 	{
 		id: 'p1',
 		title: 'SVG are awesome!',
@@ -42,7 +42,7 @@ const postsData = [
 	}
 ]
 
-const commentsData = [
+let commentsData = [
 	{
 		id: 'c1',
 		text: 'Comment1',
@@ -76,7 +76,7 @@ const typeDefs = `
     me: User!
     posts: [Post!]!
     post: Post!
-    comments: [Comment]
+    comments: [Comment!]!
 	}
 
 	
@@ -86,9 +86,9 @@ const typeDefs = `
 		createPost(data: CreatePostInput): Post!
 		createComment(data: CreateCommentInput): Comment!
 		
-		deleteUser(data: CreateUserInput): User!
-		deletePost(data: CreatePostInput): Post!
-		deleteComment(data: CreateCommentInput): Comment!
+		deleteUser(id: ID): User!
+		deletePost(id: ID): Post!
+		deleteComment(id: ID): Comment!
 		
 	}
 
@@ -162,21 +162,18 @@ const resolvers = {
 			return createdUser
 		},
 
-		createUser: (parent, args, ctx, info) => {
-			const emailTaken = usersData.some(u => u.email === args.data.email)
-			if (emailTaken) throw new Error('email taken!')
+		deleteUser: (parent, args, ctx, info) => {
+			const idExist = usersData.some(u => u.id === args.id)
+			if (!idExist) throw new Error('User id does not exist!')
 
-			const createdUser = {
-				...args.data,
-				id: crypto.randomBytes(10).toString('hex')
-			}
-			usersData.push(createdUser)
-			return createdUser
+			const toDeleteUser = usersData.filter(u => u.id === args.id)[0]
+
+			usersData = usersData.filter(u => u.id !== args.id)
+			// const message = `user id ${args.id} was deleted`
+			return toDeleteUser
 		},
 
 		createPost: (parent, args, ctx, info) => {
-			if (!usersData.some(u => u.id === args.data.userId))
-				throw new Error('user not found!')
 			const createdPost = {
 				...args.data,
 				id: crypto.randomBytes(10).toString('hex')
@@ -186,14 +183,14 @@ const resolvers = {
 		},
 
 		deletePost: (parent, args, ctx, info) => {
-			if (!usersData.some(u => u.id === args.data.userId))
-				throw new Error('user not found!')
-			const createdPost = {
-				...args.data,
-				id: crypto.randomBytes(10).toString('hex')
-			}
-			postsData.push(createdPost)
-			return createdPost
+			const idExist = postsData.some(p => p.id === args.id)
+			if (!idExist) throw new Error('Post id does not exist!')
+
+			const toDeletePost = postsData.filter(p => p.id === args.id)[0]
+
+			postsData = postsData.filter(p => p.id !== args.id)
+			// const message = `Post id ${args.id} was deleted`
+			return toDeletePost
 		},
 
 		createComment: (parent, args, ctx, info) => {
@@ -208,14 +205,26 @@ const resolvers = {
 				id: crypto.randomBytes(10).toString('hex')
 			})
 			return commentsData
+		},
+
+		deleteComment: (parent, args, ctx, info) => {
+			const idExist = commentsData.some(c => c.id === args.id)
+			if (!idExist) throw new Error('Comment id does not exist!')
+
+			const toDeleteComment = commentsData.filter(c => c.id === args.id)[0]
+
+			commentsData = commentsData.filter(c => c.id !== args.id)
+			// const message = `Post id ${args.id} was deleted`
+			return toDeleteComment
 		}
 	},
+
 	Post: {
 		author(parent, args, ctx, info) {
 			return usersData.find(u => u.id === parent.userId)
 		},
 		comments(parent, args, ctx, info) {
-			return commentsData.filter(c => c.id == parent.commentId)
+			return commentsData.filter(c => c.postId == parent.id)
 		}
 	},
 	User: {
