@@ -23,7 +23,7 @@
 		count: Int!
 		comment(postId: ID!): Comment!
 		comments: [Comment!]!
-		post(userId: ID!): Post!
+		post: Post!
 		
 	}
 
@@ -42,6 +42,7 @@
 		title: String!
 		body: String!
 		userId: ID!
+		published: Boolean
 	}
 	input CreateCommentInput {
 		text: String!
@@ -62,6 +63,7 @@
     id: ID!
     title: String!
     body: String!
+		published: Boolean
 		author: User!
 		comments: [Comment]
 	}

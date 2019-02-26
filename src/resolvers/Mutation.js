@@ -49,12 +49,19 @@ export const Mutation = {
 	},
 
 	createPost: (parent, args, { db, pubsub }, info) => {
+		const idExist = db.usersData.some(u => u.id === args.data.userId)
+		if (!idExist) throw new Error('User id does not exist!')
+
 		const createdPost = {
 			...args.data,
-			id: crypto.randomBytes(10).toString('hex')
+			id: crypto.randomBytes(10).toString('hex'),
+			published: args.data.published
 		}
 		db.postsData.push(createdPost)
-		pubsub.publish(`POST ${args.data.userId}`, { post: createdPost })
+
+		if (args.data.published) {
+			pubsub.publish(`POST`, { post: createdPost })
+		}
 
 		return createdPost
 	},

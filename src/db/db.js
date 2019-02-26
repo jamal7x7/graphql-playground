@@ -23,11 +23,13 @@ export let postsData = [
 		id: 'p1',
 		title: 'SVG are awesome!',
 		body: 'qkolsok bcdc dcdcs',
+		published: true,
 		userId: 'u1'
 	},
 	{
 		id: 'p2',
 		title: 'graphQL are the future',
+		published: true,
 		body: 'qoirjnvh bd ',
 		userId: 'u2'
 	},
@@ -35,6 +37,7 @@ export let postsData = [
 		id: 'p3',
 		title: 'Learn Apollo plus react',
 		body: 'ploksnqj dhsjdb ',
+		published: true,
 		userId: 'u3'
 	}
 ]
