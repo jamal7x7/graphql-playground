@@ -19,6 +19,14 @@
 		updateUser(id:ID!, data: UpdateUserInput): User!
 	}
 
+	type Subscription {
+		count: Int!
+		comment(postId: ID!): Comment!
+		comments: [Comment!]!
+		post(userId: ID!): Post!
+		
+	}
+
 	input UpdateUserInput {
 		name: String
 		username: String
@@ -32,7 +40,7 @@
 	}
 	input CreatePostInput {
 		title: String!
-		body: ID!
+		body: String!
 		userId: ID!
 	}
 	input CreateCommentInput {

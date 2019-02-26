@@ -1,9 +1,17 @@
-import { comment } from './comment'
-import { mutation } from './mutation'
-import { post } from './post'
-import { query } from './query'
-import { user } from './user'
+import { Comment } from './Comment'
+import { Mutation } from './Mutation'
+import { Post } from './Post'
+import { Query } from './Query'
+import Subscription from './Subscription'
+import { User } from './User'
 
-const resolvers = { ...query, ...mutation, ...post, ...user, ...comment }
+const resolvers = {
+	Query,
+	Mutation,
+	Post,
+	User,
+	Comment,
+	Subscription
+}
 
 export default resolvers
