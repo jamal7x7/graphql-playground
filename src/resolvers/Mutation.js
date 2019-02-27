@@ -7,11 +7,7 @@ export const Mutation = {
 
 		const createdUser = {
 			...args.data,
-			// id: crypto.randomBytes(10).toString('hex')
-			id: pubsub
-				.asyncIterator('COUNT')
-				.next()
-				.then(d => d.value.count)
+			id: crypto.randomBytes(10).toString('hex')
 		}
 		db.usersData.push(createdUser)
 
@@ -32,10 +28,10 @@ export const Mutation = {
 	},
 
 	updateUser: (parent, args, { db }, info) => {
-		const idExist = db.usersData.some(u => u.id === args.id)
-		if (!idExist) throw new Error('User id does not exist!')
+		const user = db.usersData.some(u => u.id === args.id)
+		if (!user) throw new Error('User id does not exist!')
 
-		const toUpdateUser = db.usersData.filter(u => u.id === args.id)[0]
+		const [toUpdateUser] = db.usersData.filter(u => u.id === args.id)
 		const updatedUser = {
 			...toUpdateUser,
 			name: args.data.name,
@@ -54,23 +50,42 @@ export const Mutation = {
 
 		const createdPost = {
 			...args.data,
-			id: crypto.randomBytes(10).toString('hex'),
-			published: args.data.published
+			id: crypto.randomBytes(10).toString('hex')
 		}
 		db.postsData.push(createdPost)
 
 		if (args.data.published) {
-			pubsub.publish(`POST`, { post: createdPost })
+			pubsub.publish(`POST`, {
+				post: { mutation: 'CREATED', data: createdPost }
+			})
 		}
 
 		return createdPost
 	},
 
-	deletePost: (parent, args, { db }, info) => {
-		const idExist = db.postsData.some(p => p.id === args.id)
-		if (!idExist) throw new Error('Post id does not exist!')
+	updatePost: (parent, args, { db, pubsub }, info) => {
+		const toUpdatePost = db.postsData.find(p => p.id === args.id)
+		if (!toUpdatePost) throw new Error('Post id does not exist!')
 
-		const toDeletePost = db.postsData.filter(p => p.id === args.id)[0]
+		toUpdatePost.title = args.data.title
+		toUpdatePost.body = args.data.body
+		toUpdatePost.published = args.data.published
+
+		pubsub.publish(`POST`, {
+			post: { mutation: 'UPDATED', data: toUpdatePost }
+		})
+
+		return toUpdatePost
+	},
+
+	deletePost: (parent, args, { db, pubsub }, info) => {
+		// const idExist = db.postsData.some(p => p.id === args.id)
+		// if (!idExist) throw new Error('Post id does not exist!')
+
+		const [toDeletePost] = db.postsData.filter(p => p.id === args.id)
+		pubsub.publish(`POST`, {
+			post: { mutation: 'DELETED', data: toDeletePost }
+		})
 
 		db.postsData = db.postsData.filter(p => p.id !== args.id)
 		db.commentsData = db.commentsData.filter(c => c.postId !== args.id)
@@ -92,20 +107,39 @@ export const Mutation = {
 
 		db.commentsData.push(createdComment)
 
-		pubsub.publish(`COMMENT ${args.data.postId}`, { comment: createdComment })
-		pubsub.publish(`COMMENTS`, { comments: db.commentsData })
+		// pubsub.publish(`COMMENT ${args.data.postId}`, { comment: createdComment })
+		pubsub.publish(`COMMENT ${args.data.postId}`, {
+			comment: { mutation: 'CREATED', data: createdComment }
+		})
 
 		return createdComment
 	},
 
-	deleteComment: (parent, args, { db }, info) => {
+	deleteComment: (parent, args, { db, pubsub }, info) => {
 		const idExist = db.commentsData.some(c => c.id === args.id)
 		if (!idExist) throw new Error('Comment id does not exist!')
 
-		const toDeleteComment = db.commentsData.filter(c => c.id === args.id)[0]
+		const [toDeleteComment] = db.commentsData.filter(c => c.id === args.id)
+		console.log(toDeleteComment)
+
+		pubsub.publish(`COMMENT ${toDeleteComment.postId}`, {
+			comment: { mutation: 'DELETED', data: toDeleteComment }
+		})
 
 		db.commentsData = db.commentsData.filter(c => c.id !== args.id)
-		// const message = `Post id ${args.id} was deleted`
+
 		return toDeleteComment
+	},
+
+	updateComment: (parent, args, { db, pubsub }, info) => {
+		const toUpDateComment = db.commentsData.find(c => c.id === args.id)
+		if (!toUpDateComment) throw new Error('Comment id does not exist!')
+
+		toUpDateComment.text = args.data.text
+		pubsub.publish(`COMMENT ${args.data.postId}`, {
+			comment: { mutation: 'UPDATED', data: toUpDateComment }
+		})
+
+		return toUpDateComment
 	}
 }

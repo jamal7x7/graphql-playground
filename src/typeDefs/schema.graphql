@@ -17,13 +17,15 @@
 		deleteComment(id: ID): Comment!
 
 		updateUser(id:ID!, data: UpdateUserInput): User!
+		updatePost(id:ID!, data: UpdatePostInput): Post!
+		updateComment(id:ID!, data: UpdateCommentInput): Comment!
 	}
 
 	type Subscription {
-		count: Int!
-		comment(postId: ID!): Comment!
-		comments: [Comment!]!
-		post: Post!
+		
+		# comment(postId: ID!): Comment!
+		comment(postId: ID!): CommentSubPayload!
+		post: PostSubPayload!
 		
 	}
 
@@ -44,10 +46,22 @@
 		userId: ID!
 		published: Boolean
 	}
+	input UpdatePostInput {
+		title: String
+		body: String
+		userId: ID
+		published: Boolean
+	}
 	input CreateCommentInput {
 		text: String!
 		postId: ID!
 		userId: ID!
+	}
+
+	input UpdateCommentInput {
+		text: String
+		postId: ID
+		userId: ID
 	}
 
   type User {
@@ -74,3 +88,19 @@
 		post: Post!
 		author: User!
   }
+
+	type PostSubPayload {
+		mutation: MutationType!
+		data: Post!
+	}
+
+	type CommentSubPayload {
+		mutation: MutationType!
+		data: Comment!
+	}
+
+	enum MutationType {
+		CREATED
+		UPDATED
+		DELETED
+	}
